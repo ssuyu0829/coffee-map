@@ -4,12 +4,19 @@ import sys
 # Ensure imports resolve from src/main/python
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request, abort, render_template
 from services import GoogleMapsService
 from core import infer_tags
 
-app = Flask(__name__)
+app = Flask(__name__,
+            template_folder="templates",
+            static_folder="static")
 maps = GoogleMapsService()
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
 
 DISTRICTS = [
     "中正區", "大同區", "中山區", "松山區", "大安區",

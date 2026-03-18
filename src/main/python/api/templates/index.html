@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coffee Map — 台北咖啡地圖</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <span class="logo">☕</span>
+    <h1>Coffee Map</h1>
+    <span>台北咖啡廳探索地圖</span>
+  </nav>
+
+  <!-- Layout -->
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <!-- District -->
+      <div>
+        <label for="district-select">行政區</label>
+        <select id="district-select">
+          <option value="">— 選擇行政區 —</option>
+        </select>
+      </div>
+
+      <!-- Tag filters -->
+      <div>
+        <label>標籤篩選（可複選）</label>
+        <div class="tag-filters" id="tag-filters"></div>
+      </div>
+
+      <!-- Search button -->
+      <button class="search-btn" id="search-btn" onclick="searchShops()">
+        搜尋咖啡廳
+      </button>
+
+      <!-- Result count -->
+      <p class="result-count" id="result-count"></p>
+
+    </aside>
+
+    <!-- Main content -->
+    <main class="main" id="main-content">
+      <div class="state-msg">
+        <div class="icon">🗺</div>
+        <p>選擇行政區，開始探索附近的咖啡廳</p>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Modal overlay -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal"></div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
