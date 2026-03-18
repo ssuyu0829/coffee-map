@@ -24,8 +24,13 @@ KEYWORD_TAGS = {
 }
 
 
-def infer_tags(name: str, reviews: list, opening_hours: list) -> list:
-    """Infer tags from shop name, review texts, and opening hours."""
+def infer_tags(name: str, reviews: list, opening_hours: list,
+               nomad: dict | None = None) -> list:
+    """
+    Infer tags from shop name, review texts, and opening hours.
+    If a matching Café Nomad entry is supplied, its human ratings are used
+    to confirm or add wifi / 插座 / 不限時 / 讀書 / 咖啡好喝 tags.
+    """
     combined_text = name.lower()
     for r in reviews:
         text = r.text if isinstance(r, object) and hasattr(r, "text") else r.get("text", "")
@@ -43,6 +48,25 @@ def infer_tags(name: str, reviews: list, opening_hours: list) -> list:
         found_tags.append("早晨")
     if _closes_after(opening_hours, after_minute=1350):    # closes at or after 22:30
         found_tags.append("深夜")
+
+    # Café Nomad enhancement
+    if nomad:
+        def _score(key):
+            try:
+                return float(nomad.get(key) or 0)
+            except (ValueError, TypeError):
+                return 0.0
+
+        if _score("wifi") >= 3 and "wifi" not in found_tags:
+            found_tags.append("wifi")
+        if nomad.get("socket") == "yes" and "插座" not in found_tags:
+            found_tags.append("插座")
+        if nomad.get("limited_time") == "no" and "不限時" not in found_tags:
+            found_tags.append("不限時")
+        if _score("quiet") >= 3 and "讀書" not in found_tags:
+            found_tags.append("讀書")
+        if _score("tasty") >= 3 and "咖啡好喝" not in found_tags:
+            found_tags.append("咖啡好喝")
 
     return found_tags
 

@@ -350,6 +350,11 @@ body {
 }
 .map-link:hover { background: var(--brown-dark); }
 
+/* Café Nomad section */
+.nomad-section { margin-bottom: 4px; }
+.nomad-header  { font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+.nomad-score   { font-family: monospace; font-size: 13px; color: var(--brown-mid); letter-spacing: 1px; }
+
 /* Articles */
 .article-item {
   display: flex;

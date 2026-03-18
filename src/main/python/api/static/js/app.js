@@ -267,6 +267,8 @@ function renderModal(modal, shop, articles) {
     ? `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}&query_place_id=${shop.place_id}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.name + " " + shop.address)}`;
 
+  const nomadHTML = renderNomadScores(shop);
+
   modal.innerHTML = `
     ${photoHTML}
     <div class="modal-body">
@@ -285,6 +287,7 @@ function renderModal(modal, shop, articles) {
       <hr class="divider">
       <div class="modal-info"><strong>營業時間</strong></div>
       ${hoursHTML}
+      ${nomadHTML}
       <hr class="divider">
       ${highReviews}
       ${lowReviews}
@@ -309,6 +312,33 @@ function renderReviews(reviews, title) {
       <div class="review-text">${r.text || "（無文字評論）"}</div>
     </div>`).join("");
   return `<div class="reviews-section"><h3>${title}</h3>${items}</div>`;
+}
+
+function renderNomadScores(shop) {
+  const hasNomad = shop.nomad_quiet != null || shop.nomad_wifi != null
+                || shop.nomad_tasty != null || shop.nomad_socket != null
+                || shop.nomad_limited_time != null;
+  if (!hasNomad) return "";
+
+  function scoreBar(val) {
+    if (val == null) return "—";
+    const filled = Math.round(val);
+    return "●".repeat(filled) + "○".repeat(5 - filled) + ` ${val.toFixed(1)}`;
+  }
+  function yesNo(val) {
+    if (!val) return "—";
+    return val === "yes" ? "✅ 有" : val === "no" ? "❌ 無" : "⚠️ 不確定";
+  }
+
+  const rows = [
+    shop.nomad_quiet        != null ? `<div class="modal-info"><strong>安靜程度</strong><span class="nomad-score">${scoreBar(shop.nomad_quiet)}</span></div>` : "",
+    shop.nomad_wifi         != null ? `<div class="modal-info"><strong>網路品質</strong><span class="nomad-score">${scoreBar(shop.nomad_wifi)}</span></div>` : "",
+    shop.nomad_tasty        != null ? `<div class="modal-info"><strong>咖啡品質</strong><span class="nomad-score">${scoreBar(shop.nomad_tasty)}</span></div>` : "",
+    shop.nomad_socket       != null ? `<div class="modal-info"><strong>電源插座</strong>${yesNo(shop.nomad_socket)}</div>` : "",
+    shop.nomad_limited_time != null ? `<div class="modal-info"><strong>限時消費</strong>${shop.nomad_limited_time === "yes" ? "⏱ 有限時" : shop.nomad_limited_time === "no" ? "✅ 不限時" : "⚠️ 不確定"}</div>` : "",
+  ].filter(Boolean).join("");
+
+  return `<hr class="divider"><div class="nomad-section"><div class="nomad-header">📊 Café Nomad 評分</div>${rows}</div>`;
 }
 
 function renderArticles(articles) {

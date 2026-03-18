@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from flask import Flask, jsonify, request, abort, render_template
-from services import GoogleMapsService, search_shop_articles
+from services import GoogleMapsService, search_shop_articles, get_cafes, match_shop
 from core import infer_tags
 
 app = Flask(__name__,
@@ -77,12 +77,20 @@ def search_shops():
     tag_filter = [t.strip() for t in request.args.get("tags", "").split(",") if t.strip()]
 
     shops = maps.search_coffee_shops(district=district, city=city)
+    nomad_cafes = get_cafes(city)
 
     results = []
     for shop in shops:
         shop = maps.get_shop_details(shop)
         all_reviews = shop.high_reviews + shop.low_reviews
-        shop.tags = infer_tags(shop.name, all_reviews, shop.opening_hours)
+        nomad = match_shop(shop.lat, shop.lng, nomad_cafes) if nomad_cafes else None
+        if nomad:
+            shop.nomad_wifi         = float(nomad.get("wifi") or 0) or None
+            shop.nomad_quiet        = float(nomad.get("quiet") or 0) or None
+            shop.nomad_tasty        = float(nomad.get("tasty") or 0) or None
+            shop.nomad_socket       = nomad.get("socket")
+            shop.nomad_limited_time = nomad.get("limited_time")
+        shop.tags = infer_tags(shop.name, all_reviews, shop.opening_hours, nomad=nomad)
         if tag_filter and not all(t in shop.tags for t in tag_filter):
             continue
         results.append(shop.to_dict())
@@ -109,12 +117,21 @@ def search_nearby():
     tag_filter = [t.strip() for t in request.args.get("tags", "").split(",") if t.strip()]
 
     shops = maps.search_nearby(lat=lat, lng=lng, radius=radius)
+    # For nearby search we don't know the city, try both supported cities
+    nomad_cafes = get_cafes("台北市") + get_cafes("新北市")
 
     results = []
     for shop in shops:
         shop = maps.get_shop_details(shop)
         all_reviews = shop.high_reviews + shop.low_reviews
-        shop.tags = infer_tags(shop.name, all_reviews, shop.opening_hours)
+        nomad = match_shop(shop.lat, shop.lng, nomad_cafes) if nomad_cafes else None
+        if nomad:
+            shop.nomad_wifi         = float(nomad.get("wifi") or 0) or None
+            shop.nomad_quiet        = float(nomad.get("quiet") or 0) or None
+            shop.nomad_tasty        = float(nomad.get("tasty") or 0) or None
+            shop.nomad_socket       = nomad.get("socket")
+            shop.nomad_limited_time = nomad.get("limited_time")
+        shop.tags = infer_tags(shop.name, all_reviews, shop.opening_hours, nomad=nomad)
         if tag_filter and not all(t in shop.tags for t in tag_filter):
             continue
         results.append(shop.to_dict())

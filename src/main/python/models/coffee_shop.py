@@ -29,6 +29,12 @@ class CoffeeShop:
     high_reviews: List[Review] = field(default_factory=list)
     low_reviews: List[Review] = field(default_factory=list)
     articles: List[dict] = field(default_factory=list)
+    # Café Nomad scores (0–5 float, or None if not matched)
+    nomad_wifi: Optional[float] = None
+    nomad_quiet: Optional[float] = None
+    nomad_tasty: Optional[float] = None
+    nomad_socket: Optional[str] = None       # "yes" | "no" | "maybe"
+    nomad_limited_time: Optional[str] = None # "yes" | "no" | "maybe"
 
     def to_dict(self) -> dict:
         return {
@@ -49,4 +55,9 @@ class CoffeeShop:
             "high_reviews": [r.__dict__ for r in self.high_reviews],
             "low_reviews": [r.__dict__ for r in self.low_reviews],
             "articles": self.articles,
+            "nomad_wifi": self.nomad_wifi,
+            "nomad_quiet": self.nomad_quiet,
+            "nomad_tasty": self.nomad_tasty,
+            "nomad_socket": self.nomad_socket,
+            "nomad_limited_time": self.nomad_limited_time,
         }
