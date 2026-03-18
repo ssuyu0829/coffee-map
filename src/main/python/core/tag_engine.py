@@ -1,6 +1,6 @@
 """
 Infers tags for a coffee shop based on its name, reviews, and opening hours.
-Tags: 讀書、不限時、外帶店、wifi、插座、寵物友善、甜點、自家烘焙、景觀
+Tags: 讀書、不限時、外帶店、wifi、插座、寵物友善、甜點、自家烘焙、景觀、咖啡好喝
 """
 
 KEYWORD_TAGS = {
@@ -13,6 +13,9 @@ KEYWORD_TAGS = {
     "甜點":    ["甜點", "蛋糕", "dessert", "cake", "pastry", "可頌"],
     "自家烘焙": ["自家烘焙", "自烘", "single origin", "精品咖啡", "手沖"],
     "景觀":    ["景觀", "view", "夜景", "河景", "山景", "露天"],
+    "咖啡好喝": ["咖啡好喝", "咖啡很好喝", "咖啡超好喝", "咖啡不錯", "咖啡很棒",
+                 "咖啡讚", "好喝的咖啡", "咖啡香", "咖啡風味",
+                 "great coffee", "good coffee", "amazing coffee", "best coffee"],
 }
 
 
