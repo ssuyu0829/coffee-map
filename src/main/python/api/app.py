@@ -84,7 +84,7 @@ def search_shops():
         all_reviews = shop.high_reviews + shop.low_reviews
         shop.tags = infer_tags(shop.name, all_reviews, shop.opening_hours)
 
-        if tag_filter and not any(t in shop.tags for t in tag_filter):
+        if tag_filter and not all(t in shop.tags for t in tag_filter):
             continue
 
         results.append(shop.to_dict())
@@ -117,7 +117,7 @@ def search_nearby():
         shop = maps.get_shop_details(shop)
         all_reviews = shop.high_reviews + shop.low_reviews
         shop.tags = infer_tags(shop.name, all_reviews, shop.opening_hours)
-        if tag_filter and not any(t in shop.tags for t in tag_filter):
+        if tag_filter and not all(t in shop.tags for t in tag_filter):
             continue
         results.append(shop.to_dict())
 
