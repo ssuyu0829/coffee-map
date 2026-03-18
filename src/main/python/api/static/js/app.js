@@ -9,19 +9,42 @@ let currentShops = [];
 // ── Init ──────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   buildTagPills();
-  loadDistricts();
+  loadCities();
 });
 
-// ── Districts ─────────────────────────────────────────
-async function loadDistricts() {
-  const sel = document.getElementById("district-select");
+// ── Cities ────────────────────────────────────────────
+async function loadCities() {
+  const sel = document.getElementById("city-select");
   try {
-    const res = await fetch("/api/districts");
+    const res = await fetch("/api/cities");
+    const { cities } = await res.json();
+    cities.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = c;
+      sel.appendChild(opt);
+    });
+  } catch (e) {
+    console.error("Failed to load cities", e);
+  }
+}
+
+async function onCityChange() {
+  const city = document.getElementById("city-select").value;
+  const distSel = document.getElementById("district-select");
+
+  distSel.innerHTML = "<option value=''>— 選擇行政區 —</option>";
+  distSel.disabled = !city;
+  document.getElementById("result-count").textContent = "";
+
+  if (!city) return;
+
+  try {
+    const res = await fetch(`/api/districts?city=${encodeURIComponent(city)}`);
     const { districts } = await res.json();
     districts.forEach(d => {
       const opt = document.createElement("option");
       opt.value = opt.textContent = d;
-      sel.appendChild(opt);
+      distSel.appendChild(opt);
     });
   } catch (e) {
     console.error("Failed to load districts", e);
@@ -52,7 +75,9 @@ function toggleTag(tag, pill) {
 
 // ── Search ────────────────────────────────────────────
 async function searchShops() {
+  const city     = document.getElementById("city-select").value;
   const district = document.getElementById("district-select").value;
+  if (!city)     { alert("請選擇縣市"); return; }
   if (!district) { alert("請選擇行政區"); return; }
 
   const btn = document.getElementById("search-btn");
@@ -60,7 +85,7 @@ async function searchShops() {
   btn.textContent = "搜尋中…";
   showLoading();
 
-  const params = new URLSearchParams({ district });
+  const params = new URLSearchParams({ city, district });
   if (activeTags.size) params.set("tags", [...activeTags].join(","));
 
   try {
