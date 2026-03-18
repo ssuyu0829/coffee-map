@@ -8,45 +8,52 @@
 </head>
 <body>
 
-  <!-- Navbar -->
   <nav class="navbar">
     <span class="logo">☕</span>
     <h1>Coffee Map</h1>
     <span>台灣咖啡廳探索地圖</span>
   </nav>
 
-  <!-- Layout -->
   <div class="layout">
-
-    <!-- Sidebar -->
     <aside class="sidebar">
 
-      <!-- Location button -->
-      <button class="location-btn" id="location-btn" onclick="searchByLocation()">
-        📍 使用目前位置
-      </button>
+      <!-- ── 第一層：搜尋方式 ── -->
+      <div class="section-label">搜尋方式</div>
 
-      <div class="divider-text">— 或手動選擇 —</div>
-
-      <!-- City -->
-      <div>
-        <label for="city-select">縣市</label>
-        <select id="city-select" onchange="onCityChange()">
-          <option value="">— 選擇縣市 —</option>
-        </select>
+      <div class="search-tabs">
+        <button class="tab-btn active" id="tab-area"     onclick="switchTab('area')">🗺 選擇區域</button>
+        <button class="tab-btn"        id="tab-location" onclick="switchTab('location')">📍 目前位置</button>
       </div>
 
-      <!-- District -->
-      <div>
-        <label for="district-select">行政區</label>
-        <select id="district-select" disabled>
-          <option value="">— 請先選擇縣市 —</option>
-        </select>
+      <!-- 區域選擇 -->
+      <div id="panel-area">
+        <div class="field">
+          <label for="city-select">縣市</label>
+          <select id="city-select" onchange="onCityChange()">
+            <option value="">— 選擇縣市 —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="district-select">行政區</label>
+          <select id="district-select" disabled>
+            <option value="">— 請先選擇縣市 —</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Filters row -->
+      <!-- 目前位置 -->
+      <div id="panel-location" style="display:none">
+        <p class="location-hint">點下方按鈕，自動搜尋你附近 1.5 公里內的咖啡廳</p>
+      </div>
+
+      <!-- ── 分隔線 ── -->
+      <hr class="section-divider">
+
+      <!-- ── 第二層：篩選條件 ── -->
+      <div class="section-label">篩選條件</div>
+
       <div class="filter-row">
-        <div class="filter-item">
+        <div class="field">
           <label for="sort-select">排序</label>
           <select id="sort-select">
             <option value="default">預設</option>
@@ -55,7 +62,7 @@
             <option value="distance">📍 距離近→遠</option>
           </select>
         </div>
-        <div class="filter-item">
+        <div class="field">
           <label class="toggle-label">
             <input type="checkbox" id="open-now-toggle">
             <span>僅顯示營業中</span>
@@ -63,33 +70,26 @@
         </div>
       </div>
 
-      <!-- Tag filters -->
-      <div>
-        <label>標籤篩選（可複選）</label>
+      <div class="field">
+        <label>標籤（可複選，需全部符合）</label>
         <div class="tag-filters" id="tag-filters"></div>
       </div>
 
-      <!-- Search button -->
-      <button class="search-btn" id="search-btn" onclick="searchShops()">
-        搜尋咖啡廳
-      </button>
+      <!-- ── 搜尋按鈕 ── -->
+      <button class="search-btn" id="search-btn" onclick="doSearch()">搜尋咖啡廳</button>
 
-      <!-- Result count -->
       <p class="result-count" id="result-count"></p>
 
     </aside>
 
-    <!-- Main content -->
     <main class="main" id="main-content">
       <div class="state-msg">
         <div class="icon">🗺</div>
-        <p>選擇縣市和行政區，或使用目前位置，開始探索咖啡廳</p>
+        <p>選擇區域或使用目前位置，開始探索咖啡廳</p>
       </div>
     </main>
-
   </div>
 
-  <!-- Modal overlay -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal" id="modal"></div>
   </div>

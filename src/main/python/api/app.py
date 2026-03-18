@@ -80,8 +80,9 @@ def search_shops():
 
     results = []
     for shop in shops:
-        # Basic data only — details fetched lazily when user opens a shop card
-        shop.tags = infer_tags(shop.name, [], [])
+        shop = maps.get_shop_details(shop)
+        all_reviews = shop.high_reviews + shop.low_reviews
+        shop.tags = infer_tags(shop.name, all_reviews, shop.opening_hours)
         if tag_filter and not all(t in shop.tags for t in tag_filter):
             continue
         results.append(shop.to_dict())
@@ -111,7 +112,9 @@ def search_nearby():
 
     results = []
     for shop in shops:
-        shop.tags = infer_tags(shop.name, [], [])
+        shop = maps.get_shop_details(shop)
+        all_reviews = shop.high_reviews + shop.low_reviews
+        shop.tags = infer_tags(shop.name, all_reviews, shop.opening_hours)
         if tag_filter and not all(t in shop.tags for t in tag_filter):
             continue
         results.append(shop.to_dict())

@@ -3,9 +3,10 @@ const ALL_TAGS = [
   "外帶店", "wifi", "寵物友善", "甜點", "自家烘焙", "景觀", "深夜", "早晨"
 ];
 
-let activeTags = new Set();
+let activeTags   = new Set();
 let currentShops = [];
-let userLocation  = null;   // { lat, lng } — set by GPS search or on-demand
+let userLocation = null;    // { lat, lng }
+let activeTab    = "area";  // "area" | "location"
 
 // ── Init ──────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
@@ -15,6 +16,25 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === e.currentTarget) closeModal();
   });
 });
+
+// ── Tab switch ────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById("panel-area").style.display     = tab === "area"     ? "" : "none";
+  document.getElementById("panel-location").style.display = tab === "location" ? "" : "none";
+  document.getElementById("tab-area").classList.toggle("active",     tab === "area");
+  document.getElementById("tab-location").classList.toggle("active", tab === "location");
+  document.getElementById("result-count").textContent = "";
+}
+
+// ── Unified search entry point ────────────────────────
+async function doSearch() {
+  if (activeTab === "area") {
+    await searchShops();
+  } else {
+    await searchByLocation();
+  }
+}
 
 // ── Cities & Districts ────────────────────────────────
 async function loadCities() {
@@ -89,37 +109,21 @@ async function searchShops() {
 async function searchByLocation() {
   if (!navigator.geolocation) { alert("您的瀏覽器不支援定位功能"); return; }
 
-  const btn = document.getElementById("location-btn");
-  btn.disabled = true;
-  btn.textContent = "📍 定位中…";
-  showLoading();
+  setLoading(true);
+  const loc = await requestLocation();
+  if (!loc) { showError("無法取得位置，請確認已允許定位權限"); setLoading(false); return; }
 
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      const { latitude, longitude } = pos.coords;
-      userLocation = { lat: latitude, lng: longitude };
-      setLoading(true);
-      const params = new URLSearchParams({ lat: latitude, lng: longitude });
-      if (activeTags.size) params.set("tags", [...activeTags].join(","));
-      try {
-        const res = await fetch(`/api/shops/nearby?${params}`);
-        if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
-        const data = await res.json();
-        handleResults(data.shops, "目前位置附近");
-      } catch (e) { showError(e.message); }
-      finally {
-        setLoading(false);
-        btn.disabled = false;
-        btn.textContent = "📍 使用目前位置";
-      }
-    },
-    (err) => {
-      alert("無法取得位置：" + err.message);
-      btn.disabled = false;
-      btn.textContent = "📍 使用目前位置";
-    },
-    { timeout: 10000 }
-  );
+  userLocation = loc;
+  const params = new URLSearchParams({ lat: loc.lat, lng: loc.lng });
+  if (activeTags.size) params.set("tags", [...activeTags].join(","));
+
+  try {
+    const res = await fetch(`/api/shops/nearby?${params}`);
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+    const data = await res.json();
+    await handleResults(data.shops, "目前位置附近");
+  } catch (e) { showError(e.message); }
+  finally     { setLoading(false); }
 }
 
 // ── Handle results (sort + open-now filter + render) ──
