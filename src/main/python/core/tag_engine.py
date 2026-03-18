@@ -1,7 +1,8 @@
 """
 Infers tags for a coffee shop based on its name, reviews, and opening hours.
-Tags: 讀書、不限時、外帶店、wifi、插座、寵物友善、甜點、自家烘焙、景觀、咖啡好喝
+Tags: 咖啡好喝、讀書、不限時、插座、有鹹食、外帶店、wifi、寵物友善、甜點、自家烘焙、景觀、深夜、早晨
 """
+import re
 
 KEYWORD_TAGS = {
     "讀書":    ["讀書", "念書", "自習", "安靜", "study", "quiet"],
@@ -27,28 +28,47 @@ def infer_tags(name: str, reviews: list, opening_hours: list) -> list:
     """Infer tags from shop name, review texts, and opening hours."""
     combined_text = name.lower()
     for r in reviews:
-        combined_text += " " + r.text.lower()
+        text = r.text if isinstance(r, object) and hasattr(r, "text") else r.get("text", "")
+        combined_text += " " + text.lower()
 
     found_tags = []
     for tag, keywords in KEYWORD_TAGS.items():
         if any(kw.lower() in combined_text for kw in keywords):
             found_tags.append(tag)
 
-    # Infer 不限時 from opening hours (open > 8 hours)
-    if "不限時" not in found_tags and _is_long_hours(opening_hours):
+    # Hour-based tags
+    if "不限時" not in found_tags and _hours_match(opening_hours, min_duration=480):
         found_tags.append("不限時")
+    if _opens_before(opening_hours, before_minute=600):    # opens at or before 10:00
+        found_tags.append("早晨")
+    if _closes_after(opening_hours, after_minute=1350):    # closes at or after 22:30
+        found_tags.append("深夜")
 
     return found_tags
 
 
-def _is_long_hours(opening_hours: list) -> bool:
-    """Return True if any day has >= 8 hours open."""
-    import re
+# ── Hour helpers ──────────────────────────────────────
+
+def _parse_times(opening_hours: list):
+    """Yield (open_minutes, close_minutes) for each day in opening_hours."""
     for line in opening_hours:
         times = re.findall(r"(\d{1,2}):(\d{2})", line)
         if len(times) >= 2:
-            open_h = int(times[0][0]) * 60 + int(times[0][1])
-            close_h = int(times[-1][0]) * 60 + int(times[-1][1])
-            if close_h - open_h >= 480:  # 8 hours
-                return True
-    return False
+            open_m  = int(times[0][0]) * 60 + int(times[0][1])
+            close_m = int(times[-1][0]) * 60 + int(times[-1][1])
+            yield open_m, close_m
+
+
+def _hours_match(opening_hours: list, min_duration: int) -> bool:
+    """True if any day is open for at least min_duration minutes."""
+    return any(c - o >= min_duration for o, c in _parse_times(opening_hours))
+
+
+def _opens_before(opening_hours: list, before_minute: int) -> bool:
+    """True if any day opens at or before before_minute (e.g. 600 = 10:00)."""
+    return any(o <= before_minute for o, _ in _parse_times(opening_hours))
+
+
+def _closes_after(opening_hours: list, after_minute: int) -> bool:
+    """True if any day closes at or after after_minute (e.g. 1350 = 22:30)."""
+    return any(c >= after_minute for _, c in _parse_times(opening_hours))

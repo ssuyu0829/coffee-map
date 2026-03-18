@@ -105,6 +105,47 @@ body {
 .tag-pill:hover  { border-color: var(--brown-light); color: var(--brown-mid); }
 .tag-pill.active { background: var(--brown-mid); border-color: var(--brown-mid); color: var(--white); }
 
+/* Location button */
+.location-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--cream);
+  color: var(--brown-mid);
+  border: 1.5px solid var(--brown-light);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.location-btn:hover    { background: var(--brown-mid); color: var(--white); }
+.location-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.divider-text {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+/* Filter row */
+.filter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.filter-item label    { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); display: block; margin-bottom: 6px; }
+.filter-item select   { width: 100%; padding: 8px 10px; border: 1.5px solid var(--cream-dark); border-radius: 8px; font-size: 14px; background: var(--cream); }
+.toggle-label         { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px !important; font-weight: 500 !important; text-transform: none !important; letter-spacing: 0 !important; color: var(--text) !important; }
+.toggle-label input   { width: 16px; height: 16px; accent-color: var(--brown-mid); cursor: pointer; }
+
+/* Open/closed badge */
+.open-badge         { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.open-badge.open    { background: #e6f4ea; color: #2d7a3a; }
+.open-badge.closed  { background: #fce8e8; color: #c0392b; }
+
+.card-name-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+.card-name-row .card-name { margin-bottom: 0; }
+
 .search-btn {
   width: 100%;
   padding: 11px;

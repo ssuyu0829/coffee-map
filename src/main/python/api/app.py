@@ -92,6 +92,38 @@ def search_shops():
     return jsonify({"city": city, "district": district, "count": len(results), "shops": results})
 
 
+@app.route("/api/shops/nearby")
+def search_nearby():
+    """
+    Search coffee shops near a GPS coordinate.
+    Query params:
+      - lat, lng (required)
+      - radius (optional, metres, default 1500)
+      - tags (optional, comma-separated)
+    """
+    try:
+        lat = float(request.args.get("lat"))
+        lng = float(request.args.get("lng"))
+    except (TypeError, ValueError):
+        abort(400, description="lat and lng are required numeric params")
+
+    radius     = int(request.args.get("radius", 1500))
+    tag_filter = [t.strip() for t in request.args.get("tags", "").split(",") if t.strip()]
+
+    shops = maps.search_nearby(lat=lat, lng=lng, radius=radius)
+
+    results = []
+    for shop in shops:
+        shop = maps.get_shop_details(shop)
+        all_reviews = shop.high_reviews + shop.low_reviews
+        shop.tags = infer_tags(shop.name, all_reviews, shop.opening_hours)
+        if tag_filter and not any(t in shop.tags for t in tag_filter):
+            continue
+        results.append(shop.to_dict())
+
+    return jsonify({"count": len(results), "shops": results})
+
+
 @app.route("/api/shops/<place_id>")
 def get_shop(place_id: str):
     """Get full details for a single shop by Google Maps place_id."""

@@ -21,6 +21,13 @@
     <!-- Sidebar -->
     <aside class="sidebar">
 
+      <!-- Location button -->
+      <button class="location-btn" id="location-btn" onclick="searchByLocation()">
+        📍 使用目前位置
+      </button>
+
+      <div class="divider-text">— 或手動選擇 —</div>
+
       <!-- City -->
       <div>
         <label for="city-select">縣市</label>
@@ -35,6 +42,24 @@
         <select id="district-select" disabled>
           <option value="">— 請先選擇縣市 —</option>
         </select>
+      </div>
+
+      <!-- Filters row -->
+      <div class="filter-row">
+        <div class="filter-item">
+          <label for="sort-select">排序</label>
+          <select id="sort-select">
+            <option value="default">預設</option>
+            <option value="rating_desc">⭐ 高→低</option>
+            <option value="rating_asc">⭐ 低→高</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="toggle-label">
+            <input type="checkbox" id="open-now-toggle">
+            <span>僅顯示營業中</span>
+          </label>
+        </div>
       </div>
 
       <!-- Tag filters -->
@@ -57,7 +82,7 @@
     <main class="main" id="main-content">
       <div class="state-msg">
         <div class="icon">🗺</div>
-        <p>選擇縣市和行政區，開始探索附近的咖啡廳</p>
+        <p>選擇縣市和行政區，或使用目前位置，開始探索咖啡廳</p>
       </div>
     </main>
 

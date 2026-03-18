@@ -1,9 +1,9 @@
 import os
+import time
 import requests
-from typing import List, Optional
+from typing import List
 from dotenv import load_dotenv
 
-# Load .env from config directory
 load_dotenv(os.path.join(os.path.dirname(__file__), "../../resources/config/.env"))
 
 import sys
@@ -20,27 +20,54 @@ class GoogleMapsService:
             raise ValueError("GOOGLE_MAPS_API_KEY not found in .env")
 
     def search_coffee_shops(self, district: str, city: str = "台北市") -> List[CoffeeShop]:
-        """Search for coffee shops in a given district."""
+        """Search coffee shops by district, fetching up to 3 pages (60 results)."""
         query = f"{city}{district} 咖啡廳"
-        url = f"{PLACES_API_BASE}/textsearch/json"
         params = {
             "query": query,
             "type": "cafe",
             "language": "zh-TW",
             "key": self.api_key,
         }
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
+        return self._fetch_pages(f"{PLACES_API_BASE}/textsearch/json", params, district)
 
-        if data.get("status") not in ("OK", "ZERO_RESULTS"):
-            raise RuntimeError(f"Google Maps API error: {data.get('status')} — {data.get('error_message', '')}")
+    def search_nearby(self, lat: float, lng: float, radius: int = 1500) -> List[CoffeeShop]:
+        """Search coffee shops near a lat/lng coordinate."""
+        params = {
+            "location": f"{lat},{lng}",
+            "radius": radius,
+            "type": "cafe",
+            "keyword": "咖啡廳",
+            "language": "zh-TW",
+            "key": self.api_key,
+        }
+        return self._fetch_pages(f"{PLACES_API_BASE}/nearbysearch/json", params, district="附近")
 
-        shops = []
-        for result in data.get("results", []):
-            shop = self._parse_basic(result, district)
-            shops.append(shop)
-        return shops
+    def _fetch_pages(self, url: str, params: dict, district: str) -> List[CoffeeShop]:
+        """Fetch up to 3 pages (60 results) from a Places API endpoint."""
+        all_shops = []
+        for page in range(3):
+            if page > 0:
+                time.sleep(2)   # Google requires a short delay before using next_page_token
+
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            status = data.get("status")
+            if status == "ZERO_RESULTS":
+                break
+            if status not in ("OK", "INVALID_REQUEST"):
+                raise RuntimeError(f"Google Maps API error: {status} — {data.get('error_message', '')}")
+
+            for result in data.get("results", []):
+                all_shops.append(self._parse_basic(result, district))
+
+            next_token = data.get("next_page_token")
+            if not next_token:
+                break
+            params = {"pagetoken": next_token, "key": self.api_key}
+
+        return all_shops
 
     def get_shop_details(self, shop: CoffeeShop) -> CoffeeShop:
         """Fetch full details and reviews for a shop."""
@@ -51,26 +78,26 @@ class GoogleMapsService:
             "language": "zh-TW",
             "key": self.api_key,
         }
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         result = response.json().get("result", {})
 
         shop.phone = result.get("formatted_phone_number")
         shop.website = result.get("website")
-        shop.opening_hours = result.get("opening_hours", {}).get("weekday_text", [])
 
-        # Location
+        hours_data = result.get("opening_hours", {})
+        shop.opening_hours = hours_data.get("weekday_text", [])
+        if shop.is_open_now is None:
+            shop.is_open_now = hours_data.get("open_now")
+
         location = result.get("geometry", {}).get("location", {})
         shop.lat = location.get("lat")
         shop.lng = location.get("lng")
 
-        # Photos (up to 3)
         photos = result.get("photos", [])[:3]
         shop.photos = [self._photo_url(p["photo_reference"]) for p in photos]
 
-        # Reviews — split into high (4–5 stars) and low (1–2 stars)
-        reviews = result.get("reviews", [])
-        for r in reviews:
+        for r in result.get("reviews", []):
             review = Review(
                 author=r.get("author_name", ""),
                 rating=r.get("rating", 0),
@@ -92,6 +119,7 @@ class GoogleMapsService:
             district=district,
             rating=result.get("rating", 0.0),
             total_ratings=result.get("user_ratings_total", 0),
+            is_open_now=result.get("opening_hours", {}).get("open_now"),
         )
 
     def _photo_url(self, photo_reference: str, max_width: int = 400) -> str:
