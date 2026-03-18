@@ -5,6 +5,7 @@ const ALL_TAGS = [
 
 let activeTags = new Set();
 let currentShops = [];
+let userLocation  = null;   // { lat, lng } — set by GPS search or on-demand
 
 // ── Init ──────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
@@ -96,6 +97,7 @@ async function searchByLocation() {
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
       const { latitude, longitude } = pos.coords;
+      userLocation = { lat: latitude, lng: longitude };
       setLoading(true);
       const params = new URLSearchParams({ lat: latitude, lng: longitude });
       if (activeTags.size) params.set("tags", [...activeTags].join(","));
@@ -121,20 +123,55 @@ async function searchByLocation() {
 }
 
 // ── Handle results (sort + open-now filter + render) ──
-function handleResults(shops, label) {
+async function handleResults(shops, label) {
   // Open-now filter
   const onlyOpen = document.getElementById("open-now-toggle").checked;
   if (onlyOpen) shops = shops.filter(s => s.is_open_now === true);
 
   // Sort
   const sort = document.getElementById("sort-select").value;
-  if (sort === "rating_desc") shops = [...shops].sort((a, b) => b.rating - a.rating);
-  if (sort === "rating_asc")  shops = [...shops].sort((a, b) => a.rating - b.rating);
+  if (sort === "rating_desc") {
+    shops = [...shops].sort((a, b) => b.rating - a.rating);
+  } else if (sort === "rating_asc") {
+    shops = [...shops].sort((a, b) => a.rating - b.rating);
+  } else if (sort === "distance") {
+    // Request location if we don't have it yet
+    if (!userLocation) {
+      userLocation = await requestLocation();
+    }
+    if (userLocation) {
+      shops = [...shops]
+        .filter(s => s.lat && s.lng)
+        .sort((a, b) => haversine(userLocation, a) - haversine(userLocation, b));
+    }
+  }
 
   currentShops = shops;
   renderShops(shops, label);
   document.getElementById("result-count").textContent =
     `找到 ${shops.length} 間咖啡廳${onlyOpen ? "（營業中）" : ""}`;
+}
+
+function requestLocation() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) { resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      ()  => resolve(null),
+      { timeout: 8000 }
+    );
+  });
+}
+
+// Haversine distance in km between userLocation and shop
+function haversine(from, shop) {
+  const R = 6371;
+  const dLat = (shop.lat - from.lat) * Math.PI / 180;
+  const dLng = (shop.lng - from.lng) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(from.lat * Math.PI/180) * Math.cos(shop.lat * Math.PI/180) *
+            Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
 // ── Render grid ───────────────────────────────────────
@@ -166,6 +203,10 @@ function buildCard(shop, index) {
 
   const tags = (shop.tags || []).slice(0, 4).map(t => `<span class="card-tag">${t}</span>`).join("");
 
+  const distHTML = (userLocation && shop.lat && shop.lng)
+    ? `<span class="card-dist">📍 ${(haversine(userLocation, shop) * 1000).toFixed(0)} m</span>`
+    : "";
+
   card.innerHTML = `
     ${photoHTML}
     <div class="card-body">
@@ -176,6 +217,7 @@ function buildCard(shop, index) {
       <div class="card-rating">
         <span class="stars">${starsHTML(shop.rating)}</span>
         <span>${shop.rating} (${(shop.total_ratings||0).toLocaleString()}則評論)</span>
+        ${distHTML}
       </div>
       <div class="card-tags">${tags}</div>
       <div class="card-address" title="${shop.address}">${shop.address}</div>

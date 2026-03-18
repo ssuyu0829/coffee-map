@@ -42,12 +42,13 @@ class GoogleMapsService:
         }
         return self._fetch_pages(f"{PLACES_API_BASE}/nearbysearch/json", params, district="附近")
 
-    def _fetch_pages(self, url: str, params: dict, district: str) -> List[CoffeeShop]:
-        """Fetch up to 3 pages (60 results) from a Places API endpoint."""
+    def _fetch_pages(self, url: str, params: dict, district: str,
+                     max_results: int = 30) -> List[CoffeeShop]:
+        """Fetch up to max_results shops across multiple pages."""
         all_shops = []
         for page in range(3):
             if page > 0:
-                time.sleep(2)   # Google requires a short delay before using next_page_token
+                time.sleep(2)
 
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
@@ -61,6 +62,8 @@ class GoogleMapsService:
 
             for result in data.get("results", []):
                 all_shops.append(self._parse_basic(result, district))
+                if len(all_shops) >= max_results:
+                    return all_shops
 
             next_token = data.get("next_page_token")
             if not next_token:
@@ -112,14 +115,23 @@ class GoogleMapsService:
         return shop
 
     def _parse_basic(self, result: dict, district: str) -> CoffeeShop:
+        # Extract photo and coords available in basic search result (no Details call needed)
+        location = result.get("geometry", {}).get("location", {})
+        photos = []
+        if result.get("photos"):
+            photos = [self._photo_url(result["photos"][0]["photo_reference"])]
+        address = result.get("formatted_address") or result.get("vicinity", "")
         return CoffeeShop(
             place_id=result["place_id"],
             name=result.get("name", ""),
-            address=result.get("formatted_address", ""),
+            address=address,
             district=district,
             rating=result.get("rating", 0.0),
             total_ratings=result.get("user_ratings_total", 0),
             is_open_now=result.get("opening_hours", {}).get("open_now"),
+            lat=location.get("lat"),
+            lng=location.get("lng"),
+            photos=photos,
         )
 
     def _photo_url(self, photo_reference: str, max_width: int = 400) -> str:

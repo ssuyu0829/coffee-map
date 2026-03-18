@@ -145,6 +145,7 @@ body {
 
 .card-name-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
 .card-name-row .card-name { margin-bottom: 0; }
+.card-dist { font-size: 11px; color: var(--text-light); margin-left: auto; white-space: nowrap; }
 
 .search-btn {
   width: 100%;
