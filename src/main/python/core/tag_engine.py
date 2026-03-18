@@ -16,6 +16,10 @@ KEYWORD_TAGS = {
     "咖啡好喝": ["咖啡好喝", "咖啡很好喝", "咖啡超好喝", "咖啡不錯", "咖啡很棒",
                  "咖啡讚", "好喝的咖啡", "咖啡香", "咖啡風味",
                  "great coffee", "good coffee", "amazing coffee", "best coffee"],
+    "有鹹食":  ["鹹食", "輕食", "早午餐", "早餐", "brunch", "toast", "吐司",
+                "三明治", "sandwich", "貝果", "bagel", "鬆餅", "waffle",
+                "pasta", "義大利麵", "飯", "麵", "漢堡", "burger",
+                "沙拉", "salad", "主食", "熱食", "餐點"],
 }
 
 
