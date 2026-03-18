@@ -127,10 +127,27 @@ function buildCard(shop, index) {
 }
 
 // ── Modal ─────────────────────────────────────────────
-function openModal(index) {
+async function openModal(index) {
   const shop = currentShops[index];
   const overlay = document.getElementById("modal-overlay");
   const modal   = document.getElementById("modal");
+
+  // Show modal immediately with basic info, then load articles
+  renderModal(modal, shop, null);
+  overlay.classList.add("open");
+
+  // Fetch full details + articles from /api/shops/<place_id>
+  try {
+    const res = await fetch(`/api/shops/${shop.place_id}`);
+    if (res.ok) {
+      const full = await res.json();
+      currentShops[index] = full;   // update cache
+      renderModal(modal, full, full.articles);
+    }
+  } catch (_) { /* keep showing basic info */ }
+}
+
+function renderModal(modal, shop, articles) {
 
   const photoHTML = shop.photos?.[0]
     ? `<div class="modal-photo"><img src="${shop.photos[0]}" alt="${shop.name}" onerror="this.parentElement.innerHTML='☕'"></div>`
@@ -143,8 +160,9 @@ function openModal(index) {
     ? shop.opening_hours.map(h => `<div class="modal-info"><strong></strong>${h}</div>`).join("")
     : `<div class="modal-info">營業時間未提供</div>`;
 
-  const highReviews = renderReviews(shop.high_reviews, "⭐ 好評");
-  const lowReviews  = renderReviews(shop.low_reviews,  "💬 負評");
+  const highReviews  = renderReviews(shop.high_reviews, "⭐ 好評");
+  const lowReviews   = renderReviews(shop.low_reviews,  "💬 負評");
+  const articlesHTML = renderArticles(articles);
 
   const mapURL = shop.lat
     ? `https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}&query_place_id=${shop.place_id}`
@@ -171,10 +189,22 @@ function openModal(index) {
       <hr class="divider">
       ${highReviews}
       ${lowReviews}
+      ${articlesHTML}
       <a class="map-link" href="${mapURL}" target="_blank">🗺 在 Google Maps 查看</a>
     </div>`;
 
   overlay.classList.add("open");
+}
+
+function renderArticles(articles) {
+  if (!articles) return `<hr class="divider"><div class="reviews-section"><h3>📰 相關文章</h3><div class="no-reviews">載入中…</div></div>`;
+  if (!articles.length) return "";
+  const items = articles.map(a => `
+    <div class="article-item">
+      <a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>
+      <span class="article-source">${a.source}</span>
+    </div>`).join("");
+  return `<hr class="divider"><div class="reviews-section"><h3>📰 相關文章</h3>${items}</div>`;
 }
 
 function closeModal() {

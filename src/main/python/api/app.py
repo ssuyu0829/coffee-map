@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from flask import Flask, jsonify, request, abort, render_template
-from services import GoogleMapsService
+from services import GoogleMapsService, search_shop_articles
 from core import infer_tags
 
 app = Flask(__name__,
@@ -78,6 +78,8 @@ def get_shop(place_id: str):
     shop = maps.get_shop_details(stub)
     all_reviews = shop.high_reviews + shop.low_reviews
     shop.tags = infer_tags(shop.name, all_reviews, shop.opening_hours)
+    articles = search_shop_articles(shop.name)
+    shop.articles = [{"title": a.title, "url": a.url, "source": a.source} for a in articles]
     return jsonify(shop.to_dict())
 
 

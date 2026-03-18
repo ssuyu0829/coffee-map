@@ -27,7 +27,7 @@ class CoffeeShop:
     lng: Optional[float] = None
     high_reviews: List[Review] = field(default_factory=list)  # top-rated reviews
     low_reviews: List[Review] = field(default_factory=list)   # critical reviews
-    articles: List[str] = field(default_factory=list)         # external article URLs
+    articles: List[dict] = field(default_factory=list)   # [{"title":..,"url":..,"source":..}]
 
     def to_dict(self) -> dict:
         return {

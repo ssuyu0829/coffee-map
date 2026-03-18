@@ -304,6 +304,28 @@ body {
 }
 .map-link:hover { background: var(--brown-dark); }
 
+/* Articles */
+.article-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.article-item a {
+  color: var(--brown-mid);
+  text-decoration: none;
+  flex: 1;
+  line-height: 1.5;
+}
+.article-item a:hover { text-decoration: underline; }
+.article-source {
+  font-size: 11px;
+  color: var(--text-light);
+  white-space: nowrap;
+}
+
 /* Spinner */
 .spinner {
   width: 36px; height: 36px;
