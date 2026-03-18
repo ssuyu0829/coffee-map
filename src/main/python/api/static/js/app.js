@@ -177,7 +177,7 @@ function renderModal(modal, shop, articles) {
       </div>
       <div class="modal-rating">
         <span class="stars">${starsHTML(shop.rating)}</span>
-        <span>${shop.rating} (${shop.total_ratings.toLocaleString()}則評論)</span>
+        <span>${shop.rating} (${(shop.total_ratings || 0).toLocaleString()}則評論)</span>
       </div>
       <div class="modal-tags">${tags}</div>
       <div class="modal-info"><strong>地址</strong>${shop.address}</div>
@@ -192,8 +192,6 @@ function renderModal(modal, shop, articles) {
       ${articlesHTML}
       <a class="map-link" href="${mapURL}" target="_blank">🗺 在 Google Maps 查看</a>
     </div>`;
-
-  overlay.classList.add("open");
 }
 
 function renderArticles(articles) {
